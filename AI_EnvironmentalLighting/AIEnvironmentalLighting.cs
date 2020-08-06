@@ -2,16 +2,13 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using Manager;
 
-namespace AI_DarkerNights
+namespace AIEnvironmentalLighting
 {
-    [BepInPlugin("animal42069.aidarkernights", "Darker Nights", VERSION)]
+    [BepInPlugin("animal42069.aidarkernights", "Environmental Lighting", VERSION)]
     [BepInProcess("AI-Syoujyo")]
-    public class AI_DarkerNights : BaseUnityPlugin
+    public class AIEnvironmentalLighting : BaseUnityPlugin
     {
         public const string VERSION = "1.0.0.0";
         private static Harmony harmony;
@@ -30,8 +27,8 @@ namespace AI_DarkerNights
             _main_intensity_multipier = Config.Bind<float>("Direct Light", "Intensity Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
             _shadow_strength_multiplier = Config.Bind<float>("Direct Light", "Shadow Strength Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
             _ambient_intensity_multiplier = Config.Bind<float>("Ambient Light", "Intensity Multiplier", 0.5f, "Amount to multiply ambient light intensity by before applying.");
-            harmony = new Harmony("AI_DarkerNights");
-            harmony.PatchAll(typeof(AI_DarkerNights));
+            harmony = new Harmony("AIEnvironmentalLighting");
+            harmony.PatchAll(typeof(AIEnvironmentalLighting));
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(EnviroSky), "Update")]
