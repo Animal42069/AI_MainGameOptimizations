@@ -58,3 +58,5 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+/AI_EnvironmentalLighting/obj/Release
+/AI_EnvironmentalLighting/obj/Debug
