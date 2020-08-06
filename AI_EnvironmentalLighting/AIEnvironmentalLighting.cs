@@ -2,16 +2,14 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using Manager;
+using UnityEngine.Rendering;
 
-namespace AI_DarkerNights
+namespace AIEnvironmentalLighting
 {
-    [BepInPlugin("animal42069.aidarkernights", "Darker Nights", VERSION)]
+    [BepInPlugin("animal42069.aidarkernights", "Environmental Lighting", VERSION)]
     [BepInProcess("AI-Syoujyo")]
-    public class AI_DarkerNights : BaseUnityPlugin
+    public class AIEnvironmentalLighting : BaseUnityPlugin
     {
         public const string VERSION = "1.0.0.0";
         private static Harmony harmony;
@@ -19,6 +17,7 @@ namespace AI_DarkerNights
         private static ConfigEntry<float> _main_intensity_multipier;
         private static ConfigEntry<float> _shadow_strength_multiplier;
         private static ConfigEntry<float> _ambient_intensity_multiplier;
+        private static ConfigEntry<AmbientMode> _ambient_mode;
 
         private static float directLightIntensity = 0;
         private static float shadowStrength = 0;
@@ -26,22 +25,24 @@ namespace AI_DarkerNights
 
         private void Awake()
         {
-            _dhh_override = Config.Bind<bool>("Direct Light", "Override DHH", true, "Replace DHH's static light intensity values with the original dynamic environmental lighting");
-            _main_intensity_multipier = Config.Bind<float>("Direct Light", "Intensity Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
-            _shadow_strength_multiplier = Config.Bind<float>("Direct Light", "Shadow Strength Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
-            _ambient_intensity_multiplier = Config.Bind<float>("Ambient Light", "Intensity Multiplier", 0.5f, "Amount to multiply ambient light intensity by before applying.");
-            harmony = new Harmony("AI_DarkerNights");
-            harmony.PatchAll(typeof(AI_DarkerNights));
+            _dhh_override = Config.Bind("Direct Light", "Override DHH", true, "Replace DHH's static light intensity values with the original dynamic environmental lighting");
+            _main_intensity_multipier = Config.Bind("Direct Light", "Intensity Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
+            _shadow_strength_multiplier = Config.Bind("Direct Light", "Shadow Strength Multiplier", 1.0f, "Amount to multiply direct light intensity by before applying.");
+            _ambient_mode = Config.Bind("Ambient Light", "Ambient Mode", AmbientMode.Trilight, "Ambient Lighting mode to use");
+            _ambient_intensity_multiplier = Config.Bind("Ambient Light", "Intensity Multiplier", 0.5f, "Amount to multiply ambient light intensity by before applying.");
+
+            harmony = new Harmony("AI_EnvironmentalLighting");
+            harmony.PatchAll(typeof(AIEnvironmentalLighting));
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(EnviroSky), "Update")]
         private static void EnviroSky_EarlyUpdate(EnviroSky __instance)
         {
-            if (RenderSettings.ambientMode != UnityEngine.Rendering.AmbientMode.Skybox)
+            if (RenderSettings.ambientMode != _ambient_mode.Value)
             {
-                Console.WriteLine("Setting Sky to SkyBox");
-                __instance.lightSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
-                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
+                Console.WriteLine("Setting Ambient Mode to " + _ambient_mode.Value);
+                __instance.lightSettings.ambientMode = _ambient_mode.Value;
+                RenderSettings.ambientMode = _ambient_mode.Value;
             }
 
         }
@@ -66,6 +67,8 @@ namespace AI_DarkerNights
             shadowStrength = ___MainLight.shadowStrength;
             ambientIntensity = RenderSettings.ambientIntensity;
 
+            Console.WriteLine("Mainlight Color was " + ___MainLight.color);
+
             if (_dhh_override.Value)
                 return;
 
@@ -73,12 +76,16 @@ namespace AI_DarkerNights
             ___MainLight.shadowStrength = shadowStrength * _shadow_strength_multiplier.Value;
             RenderSettings.ambientIntensity = ambientIntensity * _ambient_intensity_multiplier.Value;
 
+
             //           Console.WriteLine("Update directLightIntensity " + ___MainLight.intensity + " shadowStrength " + ___MainLight.shadowStrength + " ambientIntensity " + RenderSettings.ambientIntensity);
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(EnviroSky), "LateUpdate")]
         private static void EnviroSky_LateUpdate(EnviroSky __instance, Light ___MainLight)
         {
+
+            Console.WriteLine("Mainlight Color now " + ___MainLight.color);
+
             if (!_dhh_override.Value)
                 return;
 
