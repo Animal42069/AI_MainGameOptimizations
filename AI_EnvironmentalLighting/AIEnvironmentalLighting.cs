@@ -127,8 +127,6 @@ namespace EnvironmentalLighting
                     DynamicGI.UpdateEnvironment();
                     nextAmbientSkyUpdate = __instance.internalHour + 0.01f;
                 }
-
-                Console.WriteLine("Ambient Mode changed to " + RenderSettings.ambientMode);
             }
 
             if (_dhh_override.Value)

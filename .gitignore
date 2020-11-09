@@ -60,3 +60,7 @@ crashlytics-build.properties
 
 /AI_EnvironmentalLighting/obj/Release
 /AI_EnvironmentalLighting/obj/Debug
+/AI_EnvironmentalLighting/AIEnvironmentalLighting.ruleset
+/AI_EnvironmentalLighting/packages.config
+/packages
+/AI_EnvironmentalLighting/bin/Release/AIEnvironmentalLighting.dll
