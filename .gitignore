@@ -64,3 +64,6 @@ crashlytics-build.properties
 /AI_EnvironmentalLighting/packages.config
 /packages
 /AI_EnvironmentalLighting/bin/Release/AIEnvironmentalLighting.dll
+/AI_MainGameOptimizations/bin/Release
+/AI_MainGameOptimizations/obj
+/.editorconfig
