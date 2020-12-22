@@ -35,6 +35,9 @@ namespace AI_MainGameOptimizations
 
         public static void DestroyOptimizers()
         {
+            MoveTerrainToLayer((int)CameraOptimizations.CameraLayer.MapLayer);
+            EnableTreeRendering(true);
+
             isHousingIsland = false;
             terrain = null;
         }

@@ -20,7 +20,7 @@ namespace AI_MainGameOptimizations
         private static float _cameraColliderRange;
         private static float _particleRange;
 
-        public static void InitializeHousingOptimizations(GameObject player, Camera camera, float footStepRange, float cameraColliderRange, float particleRange, AnimatorCullingMode cullingMode, bool useAlternateLayers, double largeLayerThreshold, double smallLayerThreshold)
+        public static void InitializeHousingOptimizations(GameObject player, Camera camera, float footStepRange, float cameraColliderRange, float particleRange, AnimatorCullingMode cullingMode, bool useAlternateLayers, double largeLayerThreshold, double smallLayerThreshold, float heightLimit)
         {
             Console.WriteLine("InitializeHousing");
 
@@ -30,6 +30,7 @@ namespace AI_MainGameOptimizations
             BuildHousingOptimizationLists();
             UpdateAnimatorCulling(cullingMode);
             UpdateHousingLayers(useAlternateLayers, largeLayerThreshold, smallLayerThreshold);
+            UpdateHousingShadows(heightLimit);
         }
 
         public static void DestroyOptimizers()
@@ -396,6 +397,20 @@ namespace AI_MainGameOptimizations
             {
                 foreach (var housingMeshRenderer in housingRenders)
                     housingMeshRenderer.gameObject.layer = (int)CameraOptimizations.CameraLayer.MapLayer;
+            }
+        }
+
+        public static void UpdateHousingShadows(float heightLimit)
+        {
+            List<Renderer> housingRenders = BuildRendererList();
+
+            if (housingRenders == null)
+                return;
+
+            foreach (var housingRenderer in housingRenders)
+            {
+                if (!housingRenderer.name.Contains("house") && housingRenderer.bounds.extents.y <= heightLimit)
+                    housingRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
         }
 

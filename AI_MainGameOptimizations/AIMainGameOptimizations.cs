@@ -67,6 +67,7 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<bool> _moveHousingLayer;
         internal static ConfigEntry<float> _housingLargeObjectSize;
         internal static ConfigEntry<float> _housingSmallObjectSize;
+        internal static ConfigEntry<float> _housingDisableShadowHeight;
         internal static ConfigEntry<bool> _enableCityPointLights;
         internal static ConfigEntry<float> _citySpotLightIntensity;
         internal static ConfigEntry<float> _basemapDistance;
@@ -132,6 +133,8 @@ namespace AI_MainGameOptimizations
             { HousingOptimizations.UpdateHousingLayers(_moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
             (_housingAnimatorCulling = Config.Bind("Housing Optimizations", "Housing Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT CullUpdateTransforms) What animators should do when they are not visible")).SettingChanged += (s, e) =>
             { HousingOptimizations.UpdateAnimatorCulling(_housingAnimatorCulling.Value); };
+            (_housingDisableShadowHeight = Config.Bind("Housing Optimizations", "Shadow Height Limit", 0f, new ConfigDescription("(ILLUSION DEFAULT 0) Disable shadows for housing items shorter than limit (Items like clover patches, ground ivy, etc).", new AcceptableValueRange<float>(0, 5)))).SettingChanged += (s, e) =>
+            { HousingOptimizations.UpdateHousingShadows(_housingDisableShadowHeight.Value); };
 
             (_sphericalCulling = Config.Bind("Camera Clip Optimizations", "Spherical Clipping", true, new ConfigDescription("(ILLUSION DEFAULT false) Clips objects in a spherical radius so items don't appear/dissapear as you rotate the camera."))).SettingChanged += (s, e) =>
             { CameraOptimizations.UpdateCameraSphericalCulling(_sphericalCulling.Value); };
@@ -174,8 +177,8 @@ namespace AI_MainGameOptimizations
             (_worldAnimatorCulling = Config.Bind("World Optimizations", "MainIsland Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
             { WorldOptimizations.UpdateAnimatorCulling(_worldAnimatorCulling.Value); };
 
-            (_simplifySunPosition = Config.Bind("World Optimizations", "Simplify Sun Position", false, "(ILLUSION DEFAULT false) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
-            {};
+    //        (_simplifySunPosition = Config.Bind("World Optimizations", "Simplify Sun Position", false, "(ILLUSION DEFAULT false) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
+  //          {};
 
             _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
@@ -228,11 +231,17 @@ namespace AI_MainGameOptimizations
 
 
         }
-
+/*
         [HarmonyPrefix, HarmonyPatch(typeof(AIChara.ChaControl), "LateUpdateForce")]
-        public static void AICharaChaControl_LateUpdateForce(AIChara.ChaControl __instance)
+        public static bool AICharaChaControl_LateUpdateForce(AIChara.ChaControl __instance)
         {
-            Console.WriteLine($"AICharaChaControl_LateUpdateForce {__instance.name}");
+            if (!_characterLateUpdateChecks.Value)
+                return true;
+
+            if (__instance = null)
+                return false;
+
+            return (__instance.IsVisibleInCamera);
         }
 
         /*
@@ -414,7 +423,7 @@ namespace AI_MainGameOptimizations
             if (_playerObject == null || _playerCamera == null)
                 return;
 
-            HousingOptimizations.InitializeHousingOptimizations(_playerObject, _playerCamera, _footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value, _housingAnimatorCulling.Value, _moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value);
+            HousingOptimizations.InitializeHousingOptimizations(_playerObject, _playerCamera, _footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value, _housingAnimatorCulling.Value, _moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value, _housingDisableShadowHeight.Value);
             CharacterOptimizations.InitializeCharacterOptimizations(_playerObject, _dynamicBoneGenitalRange.Value, _dynamicBoneHairRange.Value, _dynamicBoneClothingRange.Value, _dynamicBoneBodyRange.Value, _characterAnimationCulling.Value);
             UIOptimizations.InitializeUserInterfaceOptimizations();
             WorldOptimizations.InitializeWorldOptimizations(_basemapDistance.Value, _terrainCastShadows.Value, _moveTerrainLayer.Value, _drawTreesAndFoliage.Value, _citySpotLightShadows.Value, _cityPointLightShadows.Value, _enableCityPointLights.Value, _citySpotLightIntensity.Value, _worldAnimatorCulling.Value);
