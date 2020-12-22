@@ -2,7 +2,7 @@
 This plugin addresses framerate problems with AIS, in an attempt to make the main game more playable.  The goal is to improve framerate without making too many sacrifices in graphical quality.  The changes are pretty extensive, so there may be bugs lurking in the code... check back often for updates.  All changes can be customized if you don't like the behavior.  Using the default settings I've provided, I go from about 10-20 fps on the main island to about 30-40 fps.  There are still occasional hang ups, mainly when the characters are being loaded/changing clothes.  Below is a list of all of the optimizations this plugin does:
 
 # Character Optimizations
-Disable all dynamic bones on all characters by visibility and range.  Illusion was disabling certain dynamic bones by visibility, but user added dynamic bones were always enabled.  Characters in HScenes have all dynamic bones enabled.
+Disable all dynamic bones on all characters by visibility and range.  Illusion was disabling certain dynamic bones by visibility, but user added dynamic bones were always enabled.  Characters in HScenes have all dynamic bones enabled.<br>
 Cull animations of non-visibile characters
 Skip IK solvers for non-visible characters
 Skip head direction solvers for non-visible characters
