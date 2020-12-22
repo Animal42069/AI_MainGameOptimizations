@@ -3,10 +3,10 @@ This plugin addresses framerate problems with AIS, in an attempt to make the mai
 
 # Character Optimizations
 Disable all dynamic bones on all characters by visibility and range.  Illusion was disabling certain dynamic bones by visibility, but user added dynamic bones were always enabled.  Characters in HScenes have all dynamic bones enabled.<br>
-Cull animations of non-visibile characters
-Skip IK solvers for non-visible characters
-Skip head direction solvers for non-visible characters
-Throttle AI checks to see what items are nearby that can be interacted with
+Cull animations of non-visibile characters.<br>
+Skip IK solvers for non-visible characters.<br>
+Skip head direction solvers for non-visible characters.<br>
+Throttle AI checks to see what items are nearby that can be interacted with.<br>
 
 # World Optimizations
 Move the main island terrain component to a new layer where it can be clipped.  The terrain component is just the mesh that you walk on and contains most of the trees.  It is not the same component as the mountaints/large terrain features.  It can be clipped rather aggessively without noticable effects.
