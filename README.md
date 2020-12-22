@@ -10,7 +10,7 @@ Throttle AI checks to see what items are nearby that can be interacted with.<br>
 
 # World Optimizations
 Move the main island terrain component to a new layer where it can be clipped.  The terrain component is just the mesh that you walk on and contains most of the trees.  It is not the same component as the mountaints/large terrain features.  It can be clipped rather aggessively without noticable effects.<br>
-Adjust other terrain features like level of detail, tree visibility, etc.  Default settings are the same as Illussion's, but they can be tweaked down to increase framerate more.<br>
+Adjust other terrain features like level of detail, tree visibility, etc.  Default settings are the same as Illusion's, but they can be tweaked down to increase framerate more.<br>
 Disable main island city point lights.  Main island lights are composed of a spot light and a point light that cast shadows.  Point lights that cast shadows have a huge CPU cost.  The intensity of the spotlight component is increased to make up for the loss of light.<br>
 Cull world animations that are not visible.<br>
 Cull animal animations that are not visible.<br>
