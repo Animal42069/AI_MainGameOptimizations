@@ -13,7 +13,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.0.0";
+        public const string VERSION = "1.0.1.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _enableIllusionDynamicBoneChecks;
@@ -110,7 +110,7 @@ namespace AI_MainGameOptimizations
             { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.LargeObjectLayer, _largeShadowDistance.Value); };
             (_mediumShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Medium", 200, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render large housing shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
             { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumShadowDistance.Value); };
-            (_smallShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Small", 50, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render small housing shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
+            (_smallShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Small", 150, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render small housing shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
             { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.SmallObjectLayer, _smallShadowDistance.Value); };
             (_waterShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Water", 100, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render water shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
             { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.WaterLayer, _waterShadowDistance.Value); };
@@ -174,7 +174,7 @@ namespace AI_MainGameOptimizations
             { WorldOptimizations.SetTerrainShadows(_terrainCastShadows.Value); };
             (_animalAnimatorCulling = Config.Bind("World Optimizations", "Animal Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT CullUpdateTransforms) What animal animators should do when they are not visible")).SettingChanged += (s, e) =>
             { AnimalOptimizations.UpdateAnimatorCulling(_animalAnimatorCulling.Value); };
-            (_worldAnimatorCulling = Config.Bind("World Optimizations", "MainIsland Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
+            (_worldAnimatorCulling = Config.Bind("World Optimizations", "Main Island Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
             { WorldOptimizations.UpdateAnimatorCulling(_worldAnimatorCulling.Value); };
 
     //        (_simplifySunPosition = Config.Bind("World Optimizations", "Simplify Sun Position", false, "(ILLUSION DEFAULT false) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
@@ -369,6 +369,7 @@ namespace AI_MainGameOptimizations
             CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.LargeObjectLayer, _terrainClipDistance.Value);
             CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.WaterLayer, _waterClipDistance.Value);
             CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);
+            CharacterOptimizations.UpdateAnimatorCulling(_characterAnimationCulling.Value);
             CharacterOptimizations.EndHScene();
         }
 

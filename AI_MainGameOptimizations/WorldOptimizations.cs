@@ -76,6 +76,9 @@ namespace AI_MainGameOptimizations
 
         public static void EnableTreeRendering(bool enable)
         {
+            if (terrain == null)
+                return;
+
             terrain.drawTreesAndFoliage = enable;
         }
 
@@ -143,7 +146,7 @@ namespace AI_MainGameOptimizations
 
         public static void AddLayerMaskToCullingMasks(CameraOptimizations.CameraLayerMask newLayerMask)
         {
-            Camera[] cameras = GameObject.FindObjectsOfType<Camera>();
+            Camera[] cameras = Resources.FindObjectsOfTypeAll<Camera>();
             if (cameras == null)
                 return;
 
@@ -153,7 +156,7 @@ namespace AI_MainGameOptimizations
                     camera.cullingMask |= (int)newLayerMask;
             }
 
-            Light[] lights = GameObject.FindObjectsOfType<Light>();
+            Light[] lights = Resources.FindObjectsOfTypeAll<Light>();
             if (lights == null)
                 return;
 

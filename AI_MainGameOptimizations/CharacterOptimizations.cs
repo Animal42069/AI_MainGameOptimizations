@@ -162,11 +162,10 @@ namespace AI_MainGameOptimizations
 
         public static void InitializeHScene(AIChara.ChaControl[] hSceneFemales)
         {
-            if (_characters == null || hSceneFemales == null)
+            if (_playerCharacter == null || _characters == null || hSceneFemales == null)
                 return;
 
             inHScene = true;
-
             foreach (AIChara.ChaControl character in _characters)
             {
                 if (character == null)
@@ -192,8 +191,13 @@ namespace AI_MainGameOptimizations
                 {
                     Console.WriteLine($"Character {character.loadNo} Not in HScene");
                 }
+                else
+                {
+                    character.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                }
             }
 
+            _playerCharacter.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             SetPlayerDynamicBones(true);
         }
 

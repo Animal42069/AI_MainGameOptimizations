@@ -294,7 +294,7 @@ namespace AI_MainGameOptimizations
 
             for (int index = startIndex; index < particleMeshRenderers.Count; index += updateRate)
             {
-                if (!particleMeshRenderers[index].gameObject.activeSelf || particleMeshRenderers[index].MeshObject == null)
+                if (particleMeshRenderers[index].MeshObject == null)
                     continue;
 
                 MeshRenderer meshRenderer = particleMeshRenderers[index].MeshObject.GetComponent<MeshRenderer>();
