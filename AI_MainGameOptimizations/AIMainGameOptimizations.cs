@@ -13,7 +13,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.1.0";
+        public const string VERSION = "1.0.2.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _enableIllusionDynamicBoneChecks;
@@ -182,7 +182,12 @@ namespace AI_MainGameOptimizations
 
             _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
-            _enableInactiveUIChecks = Config.Bind("Player Optimizations", "Inactive UI Checks", true, "When enabled, disables UI windows that aren't visible, so they aren't being rendered in the background");
+            (_enableInactiveUIChecks = Config.Bind("Player Optimizations", "Inactive UI Checks", true, "When enabled, disables UI windows that aren't visible, so they aren't being rendered in the background")).SettingChanged += (s, e) =>
+            { if (_enableInactiveUIChecks.Value)
+                    UIOptimizations.InitializeUserInterfaceOptimizations();
+                else
+                    UIOptimizations.DestroyOptimizers();
+            };
             (_playerDynamicBones = Config.Bind("Player Optimizations", "Dynamic Bones", false, "(ILLUSION DEFAULT true) Enable/disable player dynamic bones")).SettingChanged += (s, e) =>
             { CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value); };
 

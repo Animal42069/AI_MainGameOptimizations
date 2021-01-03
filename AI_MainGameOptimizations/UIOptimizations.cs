@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace AI_MainGameOptimizations
 {
-    class UIOptimizations
+    public static class UIOptimizations
     {
 
         private static List<AIProject.UI.MenuUIBehaviour> UIMenuList = new List<AIProject.UI.MenuUIBehaviour>();
@@ -63,9 +63,9 @@ namespace AI_MainGameOptimizations
 
             for (int index = startIndex; index < UIMenuList.Count; index += updateRate)
             {
-                if (UIMenuList[index].gameObject.activeSelf != UIMenuList[index].EnabledInput)
+                if (UIMenuList[index].gameObject.activeSelf != UIMenuList[index].IsActiveControl)
                 {
-                    UIMenuList[index].gameObject.SetActive(UIMenuList[index].EnabledInput);
+                    UIMenuList[index].gameObject.SetActive(UIMenuList[index].IsActiveControl);
                     if (UIMenuList[index].gameObject.activeSelf)
                         Console.WriteLine($"{UIMenuList[index].name} Enabled");
                 }
@@ -92,7 +92,8 @@ namespace AI_MainGameOptimizations
                         UIMenu.gameObject.SetActive(initialState);
                 }
             }
-            UIMenuList = new List<AIProject.UI.MenuUIBehaviour>();
+            UIMenuList.Clear();
+            UIMenuInitialState.Clear();
 
             if (MiniMapObject != null)
                 MiniMapObject.SetActive(true);
