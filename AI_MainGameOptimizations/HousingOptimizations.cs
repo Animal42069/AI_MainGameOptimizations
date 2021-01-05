@@ -15,7 +15,6 @@ namespace AI_MainGameOptimizations
         private static List<PSMeshRendererUpdater> particleMeshRenderers = new List<PSMeshRendererUpdater>();
         private static List<Light> housingLights = new List<Light>();
 
-
         private static float _footStepRange;
         private static float _cameraColliderRange;
         private static float _particleRange;
@@ -63,11 +62,11 @@ namespace AI_MainGameOptimizations
                 light.enabled = true;
             }
 
-            soundColliders = new List<Collider>();
-            cameraColliders = new List<Collider>();
-            particleSystems = new List<ParticleSystem>();
-            particleMeshRenderers = new List<PSMeshRendererUpdater>();
-            housingLights = new List<Light>();
+            soundColliders.Clear();
+            cameraColliders.Clear();
+            particleSystems.Clear();
+            particleMeshRenderers.Clear();
+            housingLights.Clear();
         }
 
         private static void BuildHousingOptimizationLists()
@@ -90,7 +89,7 @@ namespace AI_MainGameOptimizations
                 return colliders;
 
             Collider[] colliderList = gameObject.GetComponentsInChildren<Collider>(true);
-            if (colliderList == null)
+            if (colliderList.IsNullOrEmpty())
                 return colliders;
 
             foreach (var collider in colliderList)
@@ -109,7 +108,7 @@ namespace AI_MainGameOptimizations
                 return housingAnimators;
 
             Animator[] animators = gameObject.GetComponentsInChildren<Animator>(true);
-            if (animators == null)
+            if (animators.IsNullOrEmpty())
                 return housingAnimators;
 
             foreach (var animator in animators)
@@ -127,7 +126,7 @@ namespace AI_MainGameOptimizations
                 return housingRenderers;
 
             Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>(true);
-            if (renderers == null)
+            if (renderers.IsNullOrEmpty())
                 return housingRenderers;
 
             foreach (var renderer in renderers)
@@ -221,7 +220,7 @@ namespace AI_MainGameOptimizations
                 return housingLights;
 
             Light[] lights = gameObject.GetComponentsInChildren<Light>(true);
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return housingLights;
 
             foreach (var light in lights)
@@ -266,7 +265,7 @@ namespace AI_MainGameOptimizations
 
         private static void HousingParticleSystemCheck(int startIndex, int updateRate)
         {
-            if (particleSystems == null)
+            if (particleSystems.IsNullOrEmpty())
                 return;
 
             for (int index = startIndex; index < particleSystems.Count; index += updateRate)
@@ -289,7 +288,7 @@ namespace AI_MainGameOptimizations
 
         private static void EnableParticlesByRoughRange(float positionX, float positionZ, int startIndex, int updateRate, float rangeLimit)
         {
-            if (particleMeshRenderers == null)
+            if (particleMeshRenderers.IsNullOrEmpty())
                 return;
 
             for (int index = startIndex; index < particleMeshRenderers.Count; index += updateRate)
@@ -316,7 +315,7 @@ namespace AI_MainGameOptimizations
 
         private static void EnableLightsByRoughRange(float positionX, float positionZ, int startIndex, int updateRate, float rangeLimit)
         {
-            if (housingLights == null)
+            if (housingLights.IsNullOrEmpty())
                 return;
 
             for (int index = startIndex; index < housingLights.Count; index += updateRate)
@@ -331,7 +330,7 @@ namespace AI_MainGameOptimizations
 
         private static void EnableColliderByRoughRange(List<Collider> colliders, float positionX, float positionZ, int startIndex, int updateRate, float rangeLimit)
         {
-            if (colliders == null)
+            if (colliders.IsNullOrEmpty())
                 return;
 
             for (int collider = startIndex; collider < colliders.Count; collider += updateRate)
@@ -359,7 +358,7 @@ namespace AI_MainGameOptimizations
         {
             List<Animator> buildingAnimators = BuildAnimatorList();
 
-            if (buildingAnimators == null)
+            if (buildingAnimators.IsNullOrEmpty())
                 return;
 
             foreach (var animator in buildingAnimators)
@@ -376,7 +375,7 @@ namespace AI_MainGameOptimizations
         {
             List<Renderer> housingRenders = BuildRendererList();
 
-            if (housingRenders == null)
+            if (housingRenders.IsNullOrEmpty())
                 return;
 
             if (useAlternateLayers)
@@ -404,7 +403,7 @@ namespace AI_MainGameOptimizations
         {
             List<Renderer> housingRenders = BuildRendererList();
 
-            if (housingRenders == null)
+            if (housingRenders.IsNullOrEmpty())
                 return;
 
             foreach (var housingRenderer in housingRenders)
@@ -416,7 +415,7 @@ namespace AI_MainGameOptimizations
 
         public static void UpdateHousingLightLayers(bool useAlternateLayers)
         {
-            if (housingLights == null)
+            if (housingLights.IsNullOrEmpty())
                 return;
 
             int newLayer = (int)CameraOptimizations.CameraLayer.MapLayer;   

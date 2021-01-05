@@ -107,7 +107,7 @@ namespace AI_MainGameOptimizations
                 return;
 
             var lights = GetCityLights();
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return;
 
             foreach (var light in lights)
@@ -137,7 +137,7 @@ namespace AI_MainGameOptimizations
                 return;
 
             var lights = GetCityLights();
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return;
 
             foreach (var light in lights)
@@ -157,7 +157,7 @@ namespace AI_MainGameOptimizations
             }
 
             Light[] lights = Resources.FindObjectsOfTypeAll<Light>();
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return;
 
             foreach (var light in lights)
@@ -176,7 +176,7 @@ namespace AI_MainGameOptimizations
                 return;
 
             var lights = GetCityLights();
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return;
 
             foreach (var light in lights)
@@ -192,7 +192,7 @@ namespace AI_MainGameOptimizations
                 return;
 
             var lights = GetCityLights();
-            if (lights == null)
+            if (lights.IsNullOrEmpty())
                 return;
 
             foreach (var light in lights)

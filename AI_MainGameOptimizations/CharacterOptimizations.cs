@@ -46,9 +46,10 @@ namespace AI_MainGameOptimizations
 
         public static void DestroyOptimizers()
         {
-            _characters = new List<AIChara.ChaControl>();
+            _characters.Clear();
             _playerCharacter = null;
             _playerObject = null;
+            inHScene = false;
         }
 
         public static void AddCharacter(AIChara.ChaControl character)

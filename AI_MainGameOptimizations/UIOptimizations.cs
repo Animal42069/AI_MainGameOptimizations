@@ -40,7 +40,7 @@ namespace AI_MainGameOptimizations
                 return UIList;
 
             AIProject.UI.MenuUIBehaviour[] UIMenuArray = gameObject.GetComponentsInChildren<AIProject.UI.MenuUIBehaviour>(true);
-            if (UIMenuArray == null)
+            if (UIMenuArray.IsNullOrEmpty())
                 return UIList;
 
             foreach (var UIMenu in UIMenuArray)
@@ -58,7 +58,7 @@ namespace AI_MainGameOptimizations
 
         public static void UIActiveCheck(int startIndex, int updateRate)
         {
-            if (UIMenuList == null)
+            if (UIMenuList.IsNullOrEmpty())
                 return;
 
             for (int index = startIndex; index < UIMenuList.Count; index += updateRate)
