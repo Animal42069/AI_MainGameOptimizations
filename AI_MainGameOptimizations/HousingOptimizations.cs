@@ -143,14 +143,14 @@ namespace AI_MainGameOptimizations
             if (gameObject == null)
                 return housingParticleSystems;
 
-            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>(true);
+            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
             if (particleSystems != null)
             {
-          /*      foreach (var system in housingParticleSystems)
-                {
-                    var main = system.main;
-                    main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                }*/
+                /*      foreach (var system in housingParticleSystems)
+                      {
+                          var main = system.main;
+                          main.simulationSpace = ParticleSystemSimulationSpace.Local;
+                      }*/
 
                 foreach (var system in particleSystems)
                 {
@@ -163,7 +163,7 @@ namespace AI_MainGameOptimizations
             if (gameObject == null)
                 return housingParticleSystems;
 
-            particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>(true);
+            particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
             if (particleSystems != null)
             {
                 /*      foreach (var system in housingParticleSystems)
