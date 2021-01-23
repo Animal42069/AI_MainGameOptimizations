@@ -26,8 +26,6 @@ namespace AI_MainGameOptimizations
         private static AnimatorCullingMode _cullingMode = AnimatorCullingMode.CullUpdateTransforms;
         public static void InitializeCharacterOptimizations(GameObject player, float genitalRange, float hairRange, float clothingRange, float bodyRange, AnimatorCullingMode cullingMode)
         {
-            Console.WriteLine("InitializeCharacterOptimizations");
-
             _playerObject = player;
             _cullingMode = cullingMode;
             SetColliderRanges( genitalRange, hairRange, clothingRange, bodyRange);
@@ -188,14 +186,8 @@ namespace AI_MainGameOptimizations
                 DynamicBoneForce(character, characterInHScene);
 
                 // make other characters invisible?
-                if (!characterInHScene)
-                {
-                    Console.WriteLine($"Character {character.loadNo} Not in HScene");
-                }
-                else
-                {
+                if (characterInHScene)
                     character.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-                }
             }
 
             _playerCharacter.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;

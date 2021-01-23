@@ -22,8 +22,6 @@ namespace AI_MainGameOptimizations
 
         private static void GetMiniMapObjects()
         {
-            Console.WriteLine("GetMiniMapObjects");
-
             MiniMapObject = GameObject.Find("MiniMapObjects_07(Clone)");
             if (MiniMapObject == null)
                 return;
@@ -50,8 +48,6 @@ namespace AI_MainGameOptimizations
 
                 UIList.Add(UIMenu);
                 UIMenuInitialState.Add(UIMenu, UIMenu.gameObject.activeSelf);
-
-                Console.WriteLine($"UIMenuList Added {UIMenu.name}");
             }
             return UIList;
         }
@@ -64,11 +60,7 @@ namespace AI_MainGameOptimizations
             for (int index = startIndex; index < UIMenuList.Count; index += updateRate)
             {
                 if (UIMenuList[index].gameObject.activeSelf != UIMenuList[index].IsActiveControl)
-                {
                     UIMenuList[index].gameObject.SetActive(UIMenuList[index].IsActiveControl);
-                    if (UIMenuList[index].gameObject.activeSelf)
-                        Console.WriteLine($"{UIMenuList[index].name} Enabled");
-                }
             }
 
             if (startIndex == 0 && MiniMapObject != null && MiniMapCamera != null && AllAreaCamera != null)
@@ -82,8 +74,6 @@ namespace AI_MainGameOptimizations
 
         public static void DestroyOptimizers()
         {
-            Console.WriteLine("UIOptimizations.DestroyOptimizers");
-
             if (UIMenuList != null)
             {
                 foreach (var UIMenu in UIMenuList)
@@ -92,6 +82,7 @@ namespace AI_MainGameOptimizations
                         UIMenu.gameObject.SetActive(initialState);
                 }
             }
+
             UIMenuList.Clear();
             UIMenuInitialState.Clear();
 

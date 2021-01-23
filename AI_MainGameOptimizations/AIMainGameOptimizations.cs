@@ -13,7 +13,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.3.0";
+        public const string VERSION = "1.1.0.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _enableIllusionDynamicBoneChecks;
@@ -35,6 +35,7 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<int> _smallShadowDistance;
         internal static ConfigEntry<int> _largeShadowDistance;
         internal static ConfigEntry<int> _waterShadowDistance;
+        internal static ConfigEntry<int> _defaultShadowDistance;
         internal static ConfigEntry<bool> _terrainCastShadows;
 
         internal static ConfigEntry<int> _housingColliderUpdateRate;
@@ -54,6 +55,7 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<int> _smallClipDistance;
         internal static ConfigEntry<int> _terrainClipDistance;
         internal static ConfigEntry<int> _waterClipDistance;
+        internal static ConfigEntry<int> _defaultClipDistance;
         internal static ConfigEntry<int> _hSceneClipDistance;
         internal static ConfigEntry<bool> _sphericalCulling;
 
@@ -63,8 +65,7 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<bool> _enableInactiveUIChecks;
         internal static ConfigEntry<bool> _playerDynamicBones;
 
-        internal static ConfigEntry<bool> _moveTerrainLayer;
-        internal static ConfigEntry<bool> _moveHousingLayer;
+        internal static ConfigEntry<GameLayers.LayerStrategy> _layerStrategy;
         internal static ConfigEntry<float> _housingLargeObjectSize;
         internal static ConfigEntry<float> _housingSmallObjectSize;
         internal static ConfigEntry<float> _housingDisableShadowHeight;
@@ -74,12 +75,13 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<bool> _drawTreesAndFoliage;
         internal static ConfigEntry<int> _maximumLOD;
         internal static ConfigEntry<float> _LODBias;
-        internal static ConfigEntry<bool> _simplifySunPosition;
 
-        private static GameObject _playerObject;
-        private static Camera _playerCamera;
+        internal static GameObject _playerObject;
+        internal static Camera _playerCamera;
 
-        private static bool _bMapLoaded = false;
+        internal static bool _bMapLoaded = false;
+
+
 
         private void Awake()
         {
@@ -105,17 +107,19 @@ namespace AI_MainGameOptimizations
             (_shadowProjection = Config.Bind("Shadow Optimizations", "Shadow Projection Mode", ShadowProjection.StableFit, "(ILLUSION DEFAULT CloseFit) Close fit shadows update more often, but stable fit jitter less and render slightly quicker")).SettingChanged += (s, e) =>
             { QualitySettings.shadowProjection = _shadowProjection.Value; };
             (_characterShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Characters", 150, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render character shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.CharaLayer, _characterShadowDistance.Value); };
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.CharaLayer, _characterShadowDistance.Value); };
             (_largeShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Large/Terrain", 250, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render terrain shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.LargeObjectLayer, _largeShadowDistance.Value); };
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.LargeObjectLayer, _largeShadowDistance.Value); };
             (_mediumShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Medium", 200, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render large housing shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumShadowDistance.Value); };
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.MediumObjectLayer, _mediumShadowDistance.Value); };
             (_smallShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Objects, Small", 150, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render small housing shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.SmallObjectLayer, _smallShadowDistance.Value); };
-            (_waterShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Water", 100, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render water shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.WaterLayer, _waterShadowDistance.Value); };
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.SmallObjectLayer, _smallShadowDistance.Value); };
             (_worldShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - World", 250, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render world shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.MapLayer, _worldShadowDistance.Value); };
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.MapLayer, _worldShadowDistance.Value); };
+            (_waterShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Water", 100, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render water shadows", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.WaterLayer, _waterShadowDistance.Value); };
+            (_defaultShadowDistance = Config.Bind("Shadow Optimizations", "Shadows Distance - Single Layer", 250, new ConfigDescription("(ILLUSION DEFAULT 10000) Distance to render the single layer", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
+            { LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.DefaultLayer, _defaultShadowDistance.Value); };
 
             _housingColliderUpdateRate = Config.Bind("Housing Optimizations", "Collider Update Rate", 30, new ConfigDescription("(ILLUSION DEFAULT N/A) Number of frames to spread out housing collider checks, lower values = more responsive colliders but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _housingParticleUpdateRate = Config.Bind("Housing Optimizations", "Light/Particle Update Rate", 10, new ConfigDescription("(ILLUSION DEFAULT N/A) Number of frames to spread out housing particle enable checks, lower values = more responsive particle enabling but lower perfomance", new AcceptableValueRange<int>(1, 60)));
@@ -125,12 +129,15 @@ namespace AI_MainGameOptimizations
             { HousingOptimizations.SetDetectionRanges(_footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value); };
             (_particleEmitterRange = Config.Bind("Housing Optimizations", "Light/Particle Range", 100f, new ConfigDescription("(ILLUSION DEFAULT N/A) Range where housing lights and particle emitters (like torches/steam) are enabled.  Visible emitters are always enabled.", new AcceptableValueRange<float>(1, 10000)))).SettingChanged += (s, e) =>
             { HousingOptimizations.SetDetectionRanges(_footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value); };
-            (_moveHousingLayer = Config.Bind("Housing Optimizations", "Move Housing objects to alternate layers", true, "(ILLUSION DEFAULT false) Moves the housing objects to alternate layers so they can be clipped")).SettingChanged += (s, e) =>
-            { HousingOptimizations.UpdateHousingLayers(_moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
+            (_layerStrategy = Config.Bind("Housing Optimizations", "Alternate Layer Strategy", GameLayers.LayerStrategy.SingleLayer, "(ILLUSION DEFAULT None) Moves Housing/Terrain Objects to alternate Layers so they can be clipped.  Single Layer moves everything to the Single Layer.  MultiLayer moves objects to multiple layers and has better FPS but can result in lighting artifacts depending on settings.")).SettingChanged += (s, e) =>
+            { HousingOptimizations.UpdateHousingLayers(_layerStrategy.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value);
+                LightOptimizations.AdjustCharacterLighting(_layerStrategy.Value);
+                WorldOptimizations.AdjustTerrainLayer(_layerStrategy.Value);
+                WorldOptimizations.AdjustCullingMasks(_layerStrategy.Value); };
             (_housingLargeObjectSize = Config.Bind("Housing Optimizations", "Housing objects - Large Object Threshold", 1000f, "(ILLUSION DEFAULT N/A) Objects larger than this will be moved to Large Object Layer.  Size is computed by Y axis squared times X/Z diagonal")).SettingChanged += (s, e) =>
-            { HousingOptimizations.UpdateHousingLayers(_moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
+            { HousingOptimizations.UpdateHousingLayers(_layerStrategy.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
             (_housingSmallObjectSize = Config.Bind("Housing Optimizations", "Housing objects - Small Object Threshold", 100f, "(ILLUSION DEFAULT N/A) Objects smaller than this will be moved to Small Object Layer.  Size is computed by Y axis squared times X/Z diagonal")).SettingChanged += (s, e) =>
-            { HousingOptimizations.UpdateHousingLayers(_moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
+            { HousingOptimizations.UpdateHousingLayers(_layerStrategy.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value); };
             (_housingAnimatorCulling = Config.Bind("Housing Optimizations", "Housing Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT CullUpdateTransforms) What animators should do when they are not visible")).SettingChanged += (s, e) =>
             { HousingOptimizations.UpdateAnimatorCulling(_housingAnimatorCulling.Value); };
             (_housingDisableShadowHeight = Config.Bind("Housing Optimizations", "Shadow Height Limit", 0f, new ConfigDescription("(ILLUSION DEFAULT 0) Disable shadows for housing items shorter than limit (Items like clover patches, ground ivy, etc).", new AcceptableValueRange<float>(0, 5)))).SettingChanged += (s, e) =>
@@ -139,17 +146,19 @@ namespace AI_MainGameOptimizations
             (_sphericalCulling = Config.Bind("Camera Clip Optimizations", "Spherical Clipping", true, new ConfigDescription("(ILLUSION DEFAULT false) Clips objects in a spherical radius so items don't appear/dissapear as you rotate the camera."))).SettingChanged += (s, e) =>
             { CameraOptimizations.UpdateCameraSphericalCulling(_sphericalCulling.Value); };
             (_characterClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Characters", 250, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for Characters", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.CharaLayer, _characterClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.CharaLayer, _characterClipDistance.Value); };
             (_terrainClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Objects, Large/Terrain", 500, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for the Terrain (ground)", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.LargeObjectLayer, _terrainClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.LargeObjectLayer, _terrainClipDistance.Value); };
             (_mediumClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Objects, Medium", 350, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for Large Housing Objects", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MediumObjectLayer, _mediumClipDistance.Value); };
             (_smallClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Objects, Small", 200, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for Small Housing Objects", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.SmallObjectLayer, _smallClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.SmallObjectLayer, _smallClipDistance.Value); };
             (_waterClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Water", 2000, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for Water", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.WaterLayer, _waterClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.WaterLayer, _waterClipDistance.Value); };
             (_worldClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - World", 2000, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for the Map", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
-            { CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MapLayer, _worldClipDistance.Value); };
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MapLayer, _worldClipDistance.Value); };
+            (_defaultClipDistance = Config.Bind("Camera Clip Optimizations", "Clip Distance - Single Layer", 500, new ConfigDescription("(ILLUSION DEFAULT 10000) Clipping Distance for the Single Layer", new AcceptableValueRange<int>(1, 10000)))).SettingChanged += (s, e) =>
+            { CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.DefaultLayer, _defaultClipDistance.Value); };
             _hSceneClipDistance = Config.Bind("Camera Clip Optimizations", "HScene Clip Distance", 250, new ConfigDescription("(ILLUSION DEFAULT 10000) Max Clipping Distance during hScenes", new AcceptableValueRange<int>(1, 10000)));
 
             (_cityPointLightShadows = Config.Bind("World Optimizations", "City Point Light Shadows", LightShadows.None, "(ILLUSION DEFAULT Hard) Turn shadows on/off for the point lights on the main island.  Point lights are very expensive to cast shadows.")).SettingChanged += (s, e) =>
@@ -160,8 +169,6 @@ namespace AI_MainGameOptimizations
             { WorldOptimizations.SetCityLightShadows(_citySpotLightShadows.Value, _cityPointLightShadows.Value); };
             (_citySpotLightIntensity = Config.Bind("World Optimizations", "City Spot Lights Intensity", 2.0f, new ConfigDescription("(ILLUSION DEFAULT 1.5) City spot light intensity. Can be increased to counteract loss of point lights if they are disabled.", new AcceptableValueRange<float>(0, 4)))).SettingChanged += (s, e) =>
             { WorldOptimizations.SetCitySpotLightIntensity(_citySpotLightIntensity.Value); };
-            (_moveTerrainLayer = Config.Bind("World Optimizations", "Move Main Island Terrain to Large Object/Terrain Layer", true, "(ILLUSION DEFAULT false) Moves the terrain to an unused layer (Terrain Layer) so it can be clipped")).SettingChanged += (s, e) =>
-            { WorldOptimizations.MoveTerrainLayer(_moveTerrainLayer.Value); };
             (_LODBias = Config.Bind("World Optimizations", "Terrain Level of Detail Bias", 2.0f, new ConfigDescription("(ILLUSION DEFAULT 2.0) Deterimines how far away to swith to higher detail models. Higher values means use higher detail further away", new AcceptableValueRange<float>(0, 10)))).SettingChanged += (s, e) =>
             { QualitySettings.lodBias = _LODBias.Value; };
             (_maximumLOD = Config.Bind("World Optimizations", "Terrain Level of Detail Maximum", 0, new ConfigDescription("(ILLUSION DEFAULT 0) Maximum Level of Detail to use for objects. LOD 0 is highest detail, LOD 3 is lowest", new AcceptableValueRange<int>(0, 3)))).SettingChanged += (s, e) =>
@@ -176,9 +183,6 @@ namespace AI_MainGameOptimizations
             { AnimalOptimizations.UpdateAnimatorCulling(_animalAnimatorCulling.Value); };
             (_worldAnimatorCulling = Config.Bind("World Optimizations", "Main Island Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
             { WorldOptimizations.UpdateAnimatorCulling(_worldAnimatorCulling.Value); };
-
-    //        (_simplifySunPosition = Config.Bind("World Optimizations", "Simplify Sun Position", false, "(ILLUSION DEFAULT false) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
-  //          {};
 
             _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
@@ -233,47 +237,8 @@ namespace AI_MainGameOptimizations
                 animalUpdateCount = 0;
                 AnimalOptimizations.UpdateAnimatorCulling(_animalAnimatorCulling.Value);
             }
-
-
-        }
-/*
-        [HarmonyPrefix, HarmonyPatch(typeof(AIChara.ChaControl), "LateUpdateForce")]
-        public static bool AICharaChaControl_LateUpdateForce(AIChara.ChaControl __instance)
-        {
-            if (!_characterLateUpdateChecks.Value)
-                return true;
-
-            if (__instance = null)
-                return false;
-
-            return (__instance.IsVisibleInCamera);
         }
 
-        /*
-                [HarmonyPrefix, HarmonyPatch(typeof(EnviroSky), "UpdateSunAndMoonPosition")]
-                public static bool EnviroSky_UpdateSunAndMoonPosition()
-                {
-                    return !_simplifySunPosition.Value;
-                }
-
-
-                private static Stopwatch stopWatch = new Stopwatch();
-                [HarmonyPrefix, HarmonyPatch(typeof(EnviroSky), "Update")]
-                public static void EnviroSky_PreUpdate()
-                {
-                    stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                }
-
-                [HarmonyPostfix, HarmonyPatch(typeof(EnviroSky), "Update")]
-                public static void EnviroSky_PostUpdate()
-                {
-                    stopWatch.Stop();
-                    TimeSpan ts = stopWatch.Elapsed;
-
-                    Console.WriteLine($"EnviroSky_tUpdate {ts.TotalMilliseconds} ms");
-                }
-        */
         [HarmonyPostfix, HarmonyPatch(typeof(EnviroSky), "AssignAndStart")]
         private static void EnviroSky_AssignAndStart(EnviroSky __instance, GameObject player, Camera Camera)
         {
@@ -283,21 +248,21 @@ namespace AI_MainGameOptimizations
             Console.WriteLine("EnviroSky_AssignAndStart");
 
             CameraOptimizations.InitializeCamera(Camera, 0.1f, 10000f);
-            MainLightOptimizations.InitializeLighting(__instance.Components.DirectLight.GetComponent<Light>(), 10000f);
+            LightOptimizations.InitializeLighting(__instance.Components.DirectLight.GetComponent<Light>(), 10000f);
 
             CameraOptimizations.UpdateCameraSphericalCulling(_sphericalCulling.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.CharaLayer, _characterClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MapLayer, _worldClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.SmallObjectLayer, _smallClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.LargeObjectLayer, _terrainClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.WaterLayer, _waterClipDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.CharaLayer, _characterShadowDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.MapLayer, _worldShadowDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumShadowDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.SmallObjectLayer, _smallShadowDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.LargeObjectLayer, _largeShadowDistance.Value);
-            MainLightOptimizations.UpdateShadowClipPlane((int)CameraOptimizations.CameraLayer.WaterLayer, _waterShadowDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.CharaLayer, _characterClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MapLayer, _worldClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MediumObjectLayer, _mediumClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.SmallObjectLayer, _smallClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.LargeObjectLayer, _terrainClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.WaterLayer, _waterClipDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.CharaLayer, _characterShadowDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.MapLayer, _worldShadowDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.MediumObjectLayer, _mediumShadowDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.SmallObjectLayer, _smallShadowDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.LargeObjectLayer, _largeShadowDistance.Value);
+            LightOptimizations.UpdateShadowClipPlane((int)GameLayers.Layer.WaterLayer, _waterShadowDistance.Value);
             QualitySettings.shadowProjection = _shadowProjection.Value;
             QualitySettings.shadowDistance = _shadowDistance.Value;
             QualitySettings.lodBias = _LODBias.Value;
@@ -341,41 +306,59 @@ namespace AI_MainGameOptimizations
             if (__instance == null)
                 return;
 
-            if (_hSceneClipDistance.Value < _characterClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.CharaLayer, _hSceneClipDistance.Value);
-
-            if (_hSceneClipDistance.Value < _worldClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MapLayer, _hSceneClipDistance.Value);
-
-            if (_hSceneClipDistance.Value < _mediumClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MediumObjectLayer, _hSceneClipDistance.Value);
-
-            if (_hSceneClipDistance.Value < _smallClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.SmallObjectLayer, _hSceneClipDistance.Value);
-
-            if (_hSceneClipDistance.Value < _terrainClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.LargeObjectLayer, _hSceneClipDistance.Value);
-
-            if (_hSceneClipDistance.Value < _waterClipDistance.Value)
-                CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.WaterLayer, _hSceneClipDistance.Value);
-
-            AIChara.ChaControl[] females = __instance.GetFemales();
-
-            CharacterOptimizations.InitializeHScene(females);
+            StartHScene(__instance);
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(HScene), "EndProc")]
         public static void HSceneEndProcPostfix()
         {
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.CharaLayer, _characterClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MapLayer, _worldClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.MediumObjectLayer, _mediumClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.SmallObjectLayer, _smallClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.LargeObjectLayer, _terrainClipDistance.Value);
-            CameraOptimizations.UpdateCameraFarClipPlane(CameraOptimizations.CameraLayer.WaterLayer, _waterClipDistance.Value);
+            EndHScene();
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(HScene), "EndProcADV")]
+        public static void HSceneEndProcADVPostfix()
+        {
+            EndHScene();
+        }
+
+        private static void StartHScene(HScene hScene)
+        {
+            if (_hSceneClipDistance.Value < _characterClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.CharaLayer, _hSceneClipDistance.Value);
+
+            if (_hSceneClipDistance.Value < _worldClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MapLayer, _hSceneClipDistance.Value);
+
+            if (_hSceneClipDistance.Value < _mediumClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MediumObjectLayer, _hSceneClipDistance.Value);
+
+            if (_hSceneClipDistance.Value < _smallClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.SmallObjectLayer, _hSceneClipDistance.Value);
+
+            if (_hSceneClipDistance.Value < _terrainClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.LargeObjectLayer, _hSceneClipDistance.Value);
+
+            if (_hSceneClipDistance.Value < _waterClipDistance.Value)
+                CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.WaterLayer, _hSceneClipDistance.Value);
+
+            AIChara.ChaControl[] females = hScene.GetFemales();
+
+            CharacterOptimizations.InitializeHScene(females);
+            HousingOptimizations.SetParticleSystemActive(false, "e_ai_ef");
+        }
+
+        private static void EndHScene()
+        {
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.CharaLayer, _characterClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MapLayer, _worldClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.MediumObjectLayer, _mediumClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.SmallObjectLayer, _smallClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.LargeObjectLayer, _terrainClipDistance.Value);
+            CameraOptimizations.UpdateCameraFarClipPlane(GameLayers.Layer.WaterLayer, _waterClipDistance.Value);
             CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);
             CharacterOptimizations.UpdateAnimatorCulling(_characterAnimationCulling.Value);
             CharacterOptimizations.EndHScene();
+            HousingOptimizations.SetParticleSystemActive(true, "e_ai_ef");
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Map), "RemoveAgent")]
@@ -416,6 +399,14 @@ namespace AI_MainGameOptimizations
             _bMapLoaded = false;
         }
 
+        [HarmonyPrefix, HarmonyPatch(typeof(Manager.Housing), "StartHousing")]
+        private static void Housing_StartHousing()
+        {
+            Console.WriteLine("Housing_StartHousing");
+            DestroyOptimizers();
+            _bMapLoaded = false;
+        }
+
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Housing), "EndHousing")]
         private static void Housing_EndHousing()
         {
@@ -429,20 +420,14 @@ namespace AI_MainGameOptimizations
             if (_playerObject == null || _playerCamera == null)
                 return;
 
-            HousingOptimizations.InitializeHousingOptimizations(_playerObject, _playerCamera, _footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value, _housingAnimatorCulling.Value, _moveHousingLayer.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value, _housingDisableShadowHeight.Value);
+            HousingOptimizations.InitializeHousingOptimizations(_playerObject, _playerCamera, _footstepRange.Value, _cameraColliderRange.Value, _particleEmitterRange.Value, _housingAnimatorCulling.Value, _layerStrategy.Value, _housingLargeObjectSize.Value, _housingSmallObjectSize.Value, _housingDisableShadowHeight.Value);
             CharacterOptimizations.InitializeCharacterOptimizations(_playerObject, _dynamicBoneGenitalRange.Value, _dynamicBoneHairRange.Value, _dynamicBoneClothingRange.Value, _dynamicBoneBodyRange.Value, _characterAnimationCulling.Value);
             UIOptimizations.InitializeUserInterfaceOptimizations();
-            WorldOptimizations.InitializeWorldOptimizations(_basemapDistance.Value, _terrainCastShadows.Value, _moveTerrainLayer.Value, _drawTreesAndFoliage.Value, _citySpotLightShadows.Value, _cityPointLightShadows.Value, _enableCityPointLights.Value, _citySpotLightIntensity.Value, _worldAnimatorCulling.Value);
+            LightOptimizations.AdjustCharacterLighting(_layerStrategy.Value);
+            WorldOptimizations.InitializeWorldOptimizations(_basemapDistance.Value, _terrainCastShadows.Value, _layerStrategy.Value, _drawTreesAndFoliage.Value, _citySpotLightShadows.Value, _cityPointLightShadows.Value, _enableCityPointLights.Value, _citySpotLightIntensity.Value, _worldAnimatorCulling.Value);
             AnimalOptimizations.InitializeAnimalOptimizations(_animalAnimatorCulling.Value);
             CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);
-        }
-
-        [HarmonyPrefix, HarmonyPatch(typeof(Manager.Housing), "StartHousing")]
-        private static void Housing_StartHousing()
-        {
-            Console.WriteLine("Housing_StartHousing");
-            DestroyOptimizers();
-            _bMapLoaded = false;
+            
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(AIChara.CmpBoneBody), "EnableDynamicBonesBustAndHip")]

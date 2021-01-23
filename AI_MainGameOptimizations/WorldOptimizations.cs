@@ -8,9 +8,8 @@ namespace AI_MainGameOptimizations
         private static Terrain terrain;
         private static bool isHousingIsland;
 
-        public static void InitializeWorldOptimizations(float detailDistance, bool castShadows, bool useTerrainLayer, bool drawTrees, LightShadows spotLightShadows, LightShadows pointLightShadows, bool enableCityPointLights, float citySpotLightIntensity, AnimatorCullingMode cullingMode)
+        public static void InitializeWorldOptimizations(float detailDistance, bool castShadows, GameLayers.LayerStrategy layerStrategy, bool drawTrees, LightShadows spotLightShadows, LightShadows pointLightShadows, bool enableCityPointLights, float citySpotLightIntensity, AnimatorCullingMode cullingMode)
         {
-            Console.WriteLine("InitializeTerrain");
             terrain = GetTerrain();
 
             if (terrain == null)
@@ -20,22 +19,19 @@ namespace AI_MainGameOptimizations
             SetTerrainShadows(castShadows);
             EnableTreeRendering(drawTrees);
 
-            if (useTerrainLayer)
-                MoveTerrainToLayer((int)CameraOptimizations.CameraLayer.LargeObjectLayer);
+            AdjustTerrainLayer(layerStrategy);
+            AdjustCullingMasks(layerStrategy);
 
             SetCityLightShadows(spotLightShadows, pointLightShadows);
             EnableCityPointLights(enableCityPointLights);
             SetCitySpotLightIntensity(citySpotLightIntensity);
 
-            AddLayerMaskToCullingMasks(CameraOptimizations.CameraLayerMask.MediumObjectLayer);
-            AddLayerMaskToCullingMasks(CameraOptimizations.CameraLayerMask.SmallObjectLayer);
-            AddLayerMaskToCullingMasks(CameraOptimizations.CameraLayerMask.LargeObjectLayer);
             UpdateAnimatorCulling(cullingMode);
         }
 
         public static void DestroyOptimizers()
         {
-            MoveTerrainToLayer((int)CameraOptimizations.CameraLayer.MapLayer);
+            MoveTerrainToLayer((int)GameLayers.Layer.MapLayer);
             EnableTreeRendering(true);
 
             isHousingIsland = false;
@@ -82,15 +78,31 @@ namespace AI_MainGameOptimizations
             terrain.drawTreesAndFoliage = enable;
         }
 
-        public static void MoveTerrainLayer(bool toTerrainLayer)
+        public static void AdjustTerrainLayer(GameLayers.LayerStrategy layerStrategy)
         {
             if (isHousingIsland)
                 return;
 
-            if (toTerrainLayer)
-                MoveTerrainToLayer((int)CameraOptimizations.CameraLayer.LargeObjectLayer);
+            if (layerStrategy == GameLayers.LayerStrategy.MultiLayer)
+                MoveTerrainToLayer((int)GameLayers.Layer.LargeObjectLayer);
+            else if (layerStrategy == GameLayers.LayerStrategy.SingleLayer)
+                MoveTerrainToLayer((int)GameLayers.Layer.DefaultLayer);
             else
-                MoveTerrainToLayer((int)CameraOptimizations.CameraLayer.MapLayer);
+                MoveTerrainToLayer((int)GameLayers.Layer.MapLayer);
+        }
+
+        public static void AdjustCullingMasks(GameLayers.LayerStrategy layerStrategy)
+        {
+            if (layerStrategy == GameLayers.LayerStrategy.MultiLayer)
+            {
+                AddLayerMaskToCullingMasks(GameLayers.LayerMask.MediumObjectLayer | 
+                                           GameLayers.LayerMask.SmallObjectLayer | 
+                                           GameLayers.LayerMask.LargeObjectLayer);
+            }
+            else if (layerStrategy == GameLayers.LayerStrategy.SingleLayer)
+            {
+                AddLayerMaskToCullingMasks(GameLayers.LayerMask.DefaultLayer);
+            }
         }
 
         public static void MoveTerrainToLayer(int moveToLayer)
@@ -126,12 +138,12 @@ namespace AI_MainGameOptimizations
                 return;
 
             if (toTerrainLayer)
-                MoveCityLightsToLayer(CameraOptimizations.CameraLayer.LargeObjectLayer);
+                MoveCityLightsToLayer(GameLayers.Layer.LargeObjectLayer);
             else
-                MoveCityLightsToLayer(CameraOptimizations.CameraLayer.MapLayer);
+                MoveCityLightsToLayer(GameLayers.Layer.MapLayer);
         }
 
-        public static void MoveCityLightsToLayer(CameraOptimizations.CameraLayer moveToLayer)
+        public static void MoveCityLightsToLayer(GameLayers.Layer moveToLayer)
         {
             if (isHousingIsland)
                 return;
@@ -144,7 +156,7 @@ namespace AI_MainGameOptimizations
                 light.gameObject.layer = (int)moveToLayer;
         }
 
-        public static void AddLayerMaskToCullingMasks(CameraOptimizations.CameraLayerMask newLayerMask)
+        public static void AddLayerMaskToCullingMasks(GameLayers.LayerMask newLayerMask)
         {
             Camera[] cameras = Resources.FindObjectsOfTypeAll<Camera>();
             if (cameras == null)
@@ -152,7 +164,7 @@ namespace AI_MainGameOptimizations
 
             foreach (var camera in cameras)
             {
-                if ((camera.cullingMask & (int)CameraOptimizations.CameraLayerMask.MapLayer) == (int)CameraOptimizations.CameraLayerMask.MapLayer)
+                if ((camera.cullingMask & (int)GameLayers.LayerMask.MapLayer) == (int)GameLayers.LayerMask.MapLayer)
                     camera.cullingMask |= (int)newLayerMask;
             }
 
@@ -162,11 +174,31 @@ namespace AI_MainGameOptimizations
 
             foreach (var light in lights)
             {
-                if ((light.cullingMask & (int)CameraOptimizations.CameraLayerMask.MapLayer) == (int)CameraOptimizations.CameraLayerMask.MapLayer)
-                {
-                    Console.WriteLine($"{newLayerMask} added to {light.name} ");
+                if ((light.cullingMask & (int)GameLayers.LayerMask.MapLayer) == (int)GameLayers.LayerMask.MapLayer)
                     light.cullingMask |= (int)newLayerMask;
-                }
+            }
+        }
+
+        public static void RemoveLayerMaskFromCullingMasks(GameLayers.LayerMask layerMask)
+        {
+            Camera[] cameras = Resources.FindObjectsOfTypeAll<Camera>();
+            if (cameras == null)
+                return;
+
+            foreach (var camera in cameras)
+            {
+                if ((camera.cullingMask & (int)GameLayers.LayerMask.MapLayer) == (int)GameLayers.LayerMask.MapLayer)
+                    camera.cullingMask &= ~(int)layerMask;
+            }
+
+            Light[] lights = Resources.FindObjectsOfTypeAll<Light>();
+            if (lights.IsNullOrEmpty())
+                return;
+
+            foreach (var light in lights)
+            {
+                if ((light.cullingMask & (int)GameLayers.LayerMask.MapLayer) == (int)GameLayers.LayerMask.MapLayer)
+                    light.cullingMask &= ~(int)layerMask;
             }
         }
 

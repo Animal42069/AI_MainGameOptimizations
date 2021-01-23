@@ -19,22 +19,20 @@ namespace AI_MainGameOptimizations
         private static float _cameraColliderRange;
         private static float _particleRange;
 
-        public static void InitializeHousingOptimizations(GameObject player, Camera camera, float footStepRange, float cameraColliderRange, float particleRange, AnimatorCullingMode cullingMode, bool useAlternateLayers, double largeLayerThreshold, double smallLayerThreshold, float heightLimit)
+        public static void InitializeHousingOptimizations(GameObject player, Camera camera, float footStepRange, float cameraColliderRange, float particleRange, AnimatorCullingMode cullingMode, GameLayers.LayerStrategy layerStrategy, double largeLayerThreshold, double smallLayerThreshold, float heightLimit)
         {
-            Console.WriteLine("InitializeHousing");
-
             _playerObject = player;
             _playerCamera = camera;
             SetDetectionRanges(footStepRange, cameraColliderRange, particleRange);
             BuildHousingOptimizationLists();
             UpdateAnimatorCulling(cullingMode);
-            UpdateHousingLayers(useAlternateLayers, largeLayerThreshold, smallLayerThreshold);
+            UpdateHousingLayers(layerStrategy, largeLayerThreshold, smallLayerThreshold);
             UpdateHousingShadows(heightLimit);
         }
 
         public static void DestroyOptimizers()
         {
-            UpdateHousingLayers(false);
+            UpdateHousingLayers(GameLayers.LayerStrategy.None);
 
             _playerObject = null;
             _playerCamera = null;
@@ -71,8 +69,6 @@ namespace AI_MainGameOptimizations
 
         private static void BuildHousingOptimizationLists()
         {
-            Console.WriteLine("BuildHousingOptimizationLists");
-
             soundColliders = BuildColliderList("SEmesh");
             cameraColliders = BuildColliderList("camera");
             particleSystems = BuildParticleSystemList();
@@ -146,11 +142,11 @@ namespace AI_MainGameOptimizations
             ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
             if (particleSystems != null)
             {
-                /*      foreach (var system in housingParticleSystems)
-                      {
-                          var main = system.main;
-                          main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                      }*/
+                foreach (var system in housingParticleSystems)
+                {
+                    var main = system.main;
+                    main.simulationSpace = ParticleSystemSimulationSpace.Local;
+                }
 
                 foreach (var system in particleSystems)
                 {
@@ -166,11 +162,11 @@ namespace AI_MainGameOptimizations
             particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
             if (particleSystems != null)
             {
-                /*      foreach (var system in housingParticleSystems)
-                      {
-                          var main = system.main;
-                          main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                      }*/
+                foreach (var system in housingParticleSystems)
+                {
+                    var main = system.main;
+                    main.simulationSpace = ParticleSystemSimulationSpace.Local;
+                }
 
                 foreach (var system in particleSystems)
                 {
@@ -285,6 +281,24 @@ namespace AI_MainGameOptimizations
             }
         }
 
+        public static void SetParticleSystemActive(bool active, string key)
+        {
+            Console.WriteLine($"SetParticleSystemActive {active} {key}");
+
+            if (particleSystems.IsNullOrEmpty())
+                return;
+
+            foreach(var particleSystem in particleSystems)
+            {
+                Console.WriteLine($"particleSystem {particleSystem.name}");
+
+                if (particleSystem.name.Contains(key))
+                {
+                    Console.WriteLine($"particleSystem {active}");
+                    particleSystem.gameObject.SetActive(active);
+                }
+            }
+        }
 
         private static void EnableParticlesByRoughRange(float positionX, float positionZ, int startIndex, int updateRate, float rangeLimit)
         {
@@ -365,37 +379,58 @@ namespace AI_MainGameOptimizations
                 animator.cullingMode = cullingMode;
         }
 
-        public static void UpdateHousingLayers(bool useAlternateLayers, double largeLayerThreshold = 1000, double smallLayerThreshold = 100)
+        public static void UpdateHousingLayers(GameLayers.LayerStrategy layerStrategy, double largeLayerThreshold = 1000, double smallLayerThreshold = 100)
         {
-            UpdateHousingRendererLayers(useAlternateLayers, largeLayerThreshold, smallLayerThreshold);
-            UpdateHousingLightLayers(useAlternateLayers);
+            UpdateHousingRendererLayers(layerStrategy, largeLayerThreshold, smallLayerThreshold);
+            UpdateHousingLightLayers(layerStrategy);
         }
 
-        private static void UpdateHousingRendererLayers(bool useAlternateLayers, double largeLayerThreshold, double smallLayerThreshold)
+        private static void UpdateHousingRendererLayers(GameLayers.LayerStrategy layerStrategy, double largeLayerThreshold, double smallLayerThreshold)
         {
             List<Renderer> housingRenders = BuildRendererList();
 
             if (housingRenders.IsNullOrEmpty())
                 return;
 
-            if (useAlternateLayers)
+            if (layerStrategy == GameLayers.LayerStrategy.MultiLayer)
             {
                 foreach (var housingRenderer in housingRenders)
                 {
+                    if (housingRenderer.gameObject.layer != (int)GameLayers.Layer.MapLayer &&
+                        housingRenderer.gameObject.layer != (int)GameLayers.Layer.DefaultLayer)
+                        continue;
+
                     double rendererFaceSize = housingRenderer.bounds.extents.y * housingRenderer.bounds.extents.y * Math.Sqrt((housingRenderer.bounds.extents.x * housingRenderer.bounds.extents.x) + (housingRenderer.bounds.extents.z * housingRenderer.bounds.extents.z));
 
                     if (housingRenderer.name.Contains("house") || rendererFaceSize >= largeLayerThreshold)
-                        housingRenderer.gameObject.layer = (int)CameraOptimizations.CameraLayer.LargeObjectLayer;
+                        housingRenderer.gameObject.layer = (int)GameLayers.Layer.LargeObjectLayer;
                     else if (rendererFaceSize <= smallLayerThreshold)
-                        housingRenderer.gameObject.layer = (int)CameraOptimizations.CameraLayer.SmallObjectLayer;
+                        housingRenderer.gameObject.layer = (int)GameLayers.Layer.SmallObjectLayer;
                     else
-                        housingRenderer.gameObject.layer = (int)CameraOptimizations.CameraLayer.SmallObjectLayer;
+                        housingRenderer.gameObject.layer = (int)GameLayers.Layer.MediumObjectLayer;
+                }
+            }
+            else if (layerStrategy == GameLayers.LayerStrategy.SingleLayer)
+            {
+                foreach (var housingRenderer in housingRenders)
+                {
+                    if (housingRenderer.gameObject.layer == (int)GameLayers.Layer.LargeObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.SmallObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.MediumObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.MapLayer)
+                        housingRenderer.gameObject.layer = (int)GameLayers.Layer.DefaultLayer;
                 }
             }
             else
             {
-                foreach (var housingMeshRenderer in housingRenders)
-                    housingMeshRenderer.gameObject.layer = (int)CameraOptimizations.CameraLayer.MapLayer;
+                foreach (var housingRenderer in housingRenders)
+                {
+                    if (housingRenderer.gameObject.layer == (int)GameLayers.Layer.LargeObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.SmallObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.MediumObjectLayer ||
+                        housingRenderer.gameObject.layer == (int)GameLayers.Layer.DefaultLayer)
+                        housingRenderer.gameObject.layer = (int)GameLayers.Layer.MapLayer;
+                }
             }
         }
 
@@ -413,17 +448,23 @@ namespace AI_MainGameOptimizations
             }
         }
 
-        public static void UpdateHousingLightLayers(bool useAlternateLayers)
+        public static void UpdateHousingLightLayers(GameLayers.LayerStrategy layerStrategy)
         {
             if (housingLights.IsNullOrEmpty())
                 return;
-
-            int newLayer = (int)CameraOptimizations.CameraLayer.MapLayer;   
-            if (useAlternateLayers)
-                newLayer = (int)CameraOptimizations.CameraLayer.SmallObjectLayer;
+            int newLayer = (int)GameLayers.Layer.MapLayer;
+            if (layerStrategy == GameLayers.LayerStrategy.MultiLayer)
+                newLayer = (int)GameLayers.Layer.MediumObjectLayer;
+            else if (layerStrategy == GameLayers.LayerStrategy.SingleLayer)
+                newLayer = (int)GameLayers.Layer.DefaultLayer;
 
             foreach (var housingLight in housingLights)
-                housingLight.gameObject.layer = newLayer;
+            {
+                if (housingLight.gameObject.layer == (int)GameLayers.Layer.SmallObjectLayer ||
+                    housingLight.gameObject.layer == (int)GameLayers.Layer.DefaultLayer ||
+                    housingLight.gameObject.layer == (int)GameLayers.Layer.MapLayer)
+                    housingLight.gameObject.layer = newLayer;
+            }
         }
     }
 }
