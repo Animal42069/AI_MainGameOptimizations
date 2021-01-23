@@ -11,7 +11,8 @@ namespace AI_MainGameOptimizations
 
         private static List<Collider> soundColliders = new List<Collider>();
         private static List<Collider> cameraColliders = new List<Collider>();
-        private static List<ParticleSystem> particleSystems = new List<ParticleSystem>();
+        private static List<ParticleSystem> housingParticleSystems = new List<ParticleSystem>();
+        private static List<ParticleSystem> housingParticleSystemsComplete = new List<ParticleSystem>();
         private static List<PSMeshRendererUpdater> particleMeshRenderers = new List<PSMeshRendererUpdater>();
         private static List<Light> housingLights = new List<Light>();
 
@@ -62,7 +63,8 @@ namespace AI_MainGameOptimizations
 
             soundColliders.Clear();
             cameraColliders.Clear();
-            particleSystems.Clear();
+            housingParticleSystems.Clear();
+            housingParticleSystemsComplete.Clear();
             particleMeshRenderers.Clear();
             housingLights.Clear();
         }
@@ -71,7 +73,7 @@ namespace AI_MainGameOptimizations
         {
             soundColliders = BuildColliderList("SEmesh");
             cameraColliders = BuildColliderList("camera");
-            particleSystems = BuildParticleSystemList();
+            BuildParticleSystemList();
             particleMeshRenderers = BuildPSMeshRendererUpdaterList();
             housingLights = BuildHousingLightList();
         }
@@ -131,51 +133,38 @@ namespace AI_MainGameOptimizations
             return housingRenderers;
         }
 
-        private static List<ParticleSystem> BuildParticleSystemList()
+        private static void BuildParticleSystemList()
         {
-            List<ParticleSystem> housingParticleSystems = new List<ParticleSystem>();
+            housingParticleSystems = new List<ParticleSystem>();
+            housingParticleSystemsComplete = new List<ParticleSystem>();
 
-            var gameObject = GameObject.Find("CommonSpace/MapRoot/NavMeshSurface");
-            if (gameObject == null)
-                return housingParticleSystems;
-
-            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
+            ParticleSystem[] particleSystems = GameObject.Find("CommonSpace/MapRoot/NavMeshSurface")?.GetComponentsInChildren<ParticleSystem>(true);
             if (particleSystems != null)
             {
-                foreach (var system in housingParticleSystems)
+                foreach (var particleSystem in particleSystems)
                 {
-                    var main = system.main;
+                    var main = particleSystem.main;
                     main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                }
 
-                foreach (var system in particleSystems)
-                {
-                    if (!system.automaticCullingEnabled)
-                        housingParticleSystems.Add(system);
+                    if (particleSystem.gameObject.activeSelf && !particleSystem.automaticCullingEnabled)
+                        housingParticleSystems.Add(particleSystem);
+
+                    housingParticleSystemsComplete.Add(particleSystem);
                 }
             }
 
-            gameObject = GameObject.Find("map00_Beach");
-            if (gameObject == null)
-                return housingParticleSystems;
-
-            particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
-            if (particleSystems != null)
+            particleSystems = GameObject.Find("map00_Beach")?.GetComponentsInChildren<ParticleSystem>();
+            if (particleSystems == null)
+                return;
+            
+            foreach (var particleSystem in particleSystems)
             {
-                foreach (var system in housingParticleSystems)
-                {
-                    var main = system.main;
-                    main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                }
+                var main = particleSystem.main;
+                main.simulationSpace = ParticleSystemSimulationSpace.Local;
 
-                foreach (var system in particleSystems)
-                {
-                    if (!system.automaticCullingEnabled)
-                        housingParticleSystems.Add(system);
-                }
-            }
-
-            return housingParticleSystems;
+                if (!particleSystem.automaticCullingEnabled)
+                    housingParticleSystems.Add(particleSystem);
+            }       
         }
 
         private static List<PSMeshRendererUpdater> BuildPSMeshRendererUpdaterList()
@@ -261,23 +250,23 @@ namespace AI_MainGameOptimizations
 
         private static void HousingParticleSystemCheck(int startIndex, int updateRate)
         {
-            if (particleSystems.IsNullOrEmpty())
+            if (housingParticleSystems.IsNullOrEmpty())
                 return;
 
-            for (int index = startIndex; index < particleSystems.Count; index += updateRate)
+            for (int index = startIndex; index < housingParticleSystems.Count; index += updateRate)
             {
-                if (!particleSystems[index].gameObject.activeSelf)
+                if (!housingParticleSystems[index].gameObject.activeSelf)
                     continue;
 
-                ParticleSystemRenderer particleSystemRenderer = particleSystems[index].gameObject.GetComponent<ParticleSystemRenderer>();
+                ParticleSystemRenderer particleSystemRenderer = housingParticleSystems[index].gameObject.GetComponent<ParticleSystemRenderer>();
 
                 if (particleSystemRenderer == null)
                     continue;
 
-                if (particleSystems[index].isPaused && particleSystemRenderer.isVisible)
-                    particleSystems[index].Play(true);
-                else if (particleSystems[index].isPlaying && !particleSystemRenderer.isVisible)
-                    particleSystems[index].Pause(true);
+                if (housingParticleSystems[index].isPaused && particleSystemRenderer.isVisible)
+                    housingParticleSystems[index].Play(true);
+                else if (housingParticleSystems[index].isPlaying && !particleSystemRenderer.isVisible)
+                    housingParticleSystems[index].Pause(true);
             }
         }
 
@@ -285,10 +274,10 @@ namespace AI_MainGameOptimizations
         {
             Console.WriteLine($"SetParticleSystemActive {active} {key}");
 
-            if (particleSystems.IsNullOrEmpty())
+            if (housingParticleSystemsComplete.IsNullOrEmpty())
                 return;
 
-            foreach(var particleSystem in particleSystems)
+            foreach(var particleSystem in housingParticleSystemsComplete)
             {
                 Console.WriteLine($"particleSystem {particleSystem.name}");
 
