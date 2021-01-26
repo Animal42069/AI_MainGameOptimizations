@@ -14,6 +14,11 @@ namespace AI_MainGameOptimizations
         private static GameObject MiniMapObject;
         private static Transform MiniMapCamera;
         private static Transform AllAreaCamera;
+
+        private static bool miniMapSkipEnabled = false;
+        private static float miniMapNextUpdateTime = -1f;
+        private static int miniMapVisibleMode = -1;
+
         public static void InitializeUserInterfaceOptimizations()
         {
             UIMenuList = BuildMenuUIList();
@@ -92,6 +97,24 @@ namespace AI_MainGameOptimizations
             MiniMapObject = null;
             MiniMapCamera = null;
             AllAreaCamera = null;
+        }
+
+        public static bool ShouldUpdateMiniMap()
+        {
+            return (!miniMapSkipEnabled || Time.fixedUnscaledTime >= miniMapNextUpdateTime);
+        }
+
+        public static void UpdateMiniMapTimer(int visibleMode, int miniMapMaxFPS)
+        {
+            if (miniMapVisibleMode != visibleMode)
+            {
+                miniMapVisibleMode = visibleMode;
+                miniMapSkipEnabled = (visibleMode == 0);
+                miniMapNextUpdateTime = -1f;
+            }
+
+            if (miniMapSkipEnabled && Time.fixedUnscaledTime > miniMapNextUpdateTime)
+                miniMapNextUpdateTime = Time.fixedUnscaledTime + (1f / miniMapMaxFPS);
         }
     }
 }

@@ -272,20 +272,13 @@ namespace AI_MainGameOptimizations
 
         public static void SetParticleSystemActive(bool active, string key)
         {
-            Console.WriteLine($"SetParticleSystemActive {active} {key}");
-
             if (housingParticleSystemsComplete.IsNullOrEmpty())
                 return;
 
             foreach(var particleSystem in housingParticleSystemsComplete)
             {
-                Console.WriteLine($"particleSystem {particleSystem.name}");
-
                 if (particleSystem.name.Contains(key))
-                {
-                    Console.WriteLine($"particleSystem {active}");
                     particleSystem.gameObject.SetActive(active);
-                }
             }
         }
 
@@ -441,6 +434,7 @@ namespace AI_MainGameOptimizations
         {
             if (housingLights.IsNullOrEmpty())
                 return;
+
             int newLayer = (int)GameLayers.Layer.MapLayer;
             if (layerStrategy == GameLayers.LayerStrategy.MultiLayer)
                 newLayer = (int)GameLayers.Layer.MediumObjectLayer;

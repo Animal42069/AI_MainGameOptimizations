@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using AIProject;
 
 namespace AI_MainGameOptimizations
 {
@@ -13,7 +14,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.0.0";
+        public const string VERSION = "1.1.1.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _enableIllusionDynamicBoneChecks;
@@ -59,6 +60,7 @@ namespace AI_MainGameOptimizations
         internal static ConfigEntry<int> _hSceneClipDistance;
         internal static ConfigEntry<bool> _sphericalCulling;
 
+        internal static ConfigEntry<int> _miniMapMaxFPS;
         internal static ConfigEntry<int> _commandUpdateRate;
         internal static ConfigEntry<int> _searchUpdateRate;
         internal static ConfigEntry<int> _UIMenuUpdateRate;
@@ -184,6 +186,7 @@ namespace AI_MainGameOptimizations
             (_worldAnimatorCulling = Config.Bind("World Optimizations", "Main Island Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
             { WorldOptimizations.UpdateAnimatorCulling(_worldAnimatorCulling.Value); };
 
+            _miniMapMaxFPS = Config.Bind("Player Optimizations", "MiniMap Maximum FPS", 15, new ConfigDescription("Maximum FPS to render the MiniMap, higher values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             (_enableInactiveUIChecks = Config.Bind("Player Optimizations", "Inactive UI Checks", true, "When enabled, disables UI windows that aren't visible, so they aren't being rendered in the background")).SettingChanged += (s, e) =>
@@ -269,9 +272,9 @@ namespace AI_MainGameOptimizations
             QualitySettings.maximumLODLevel = _maximumLOD.Value;
         }
 
-        private static readonly Dictionary<AIProject.AgentActor, int> _updateThrottleList = new Dictionary<AIProject.AgentActor, int>();
-        [HarmonyPrefix, HarmonyPatch(typeof(AIProject.SearchArea), "OnUpdate")]
-        public static bool SearchAreaUpdatePrefix(AIProject.AgentActor ____agent)
+        private static readonly Dictionary<AgentActor, int> _updateThrottleList = new Dictionary<AgentActor, int>();
+        [HarmonyPrefix, HarmonyPatch(typeof(SearchArea), "OnUpdate")]
+        public static bool SearchAreaUpdatePrefix(AgentActor ____agent)
         {
             if (____agent == null)
                 return true;
@@ -290,7 +293,7 @@ namespace AI_MainGameOptimizations
         }
 
         private static int commandCount = 0;
-        [HarmonyPrefix, HarmonyPatch(typeof(AIProject.CommandArea), "Update")]
+        [HarmonyPrefix, HarmonyPatch(typeof(CommandArea), "Update")]
         public static bool CommandAreaUpdatePrefix()
         {
             if (++commandCount <= _commandUpdateRate.Value)
@@ -299,7 +302,27 @@ namespace AI_MainGameOptimizations
             commandCount = 0;
             return true;
         }
-  
+
+        [HarmonyPatch(typeof(MiniMapControler), "Update")]
+        [HarmonyPrefix]
+        static bool MiniMapControllerUpdatePrefix(bool ___endInit)
+        {
+            if (!___endInit)
+                return true;
+
+            return UIOptimizations.ShouldUpdateMiniMap();
+        }
+
+        [HarmonyPatch(typeof(MiniMapControler), "Update")]
+        [HarmonyPostfix]
+        static void MiniMapControllerUpdatePostfix(MiniMapControler __instance, bool ___endInit)
+        {
+            if (__instance == null || !___endInit)
+                return;
+
+            UIOptimizations.UpdateMiniMapTimer(__instance.VisibleMode, _miniMapMaxFPS.Value);
+        }
+
         [HarmonyPrefix, HarmonyPatch(typeof(HScene), "SetStartVoice")]
         public static void HSceneSetStartVoicePrefix(HScene __instance)
         {
@@ -362,7 +385,7 @@ namespace AI_MainGameOptimizations
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Map), "RemoveAgent")]
-        public static void MapManager_RemoveAgent(AIProject.AgentActor agent)
+        public static void MapManager_RemoveAgent(AgentActor agent)
         {
             Console.WriteLine($"MapManager_RemoveAgent");
             if (_bMapLoaded && agent != null)
@@ -373,7 +396,7 @@ namespace AI_MainGameOptimizations
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Map), "AddAgent")]
-        public static void MapManager_AddAgent(AIProject.AgentActor __result)
+        public static void MapManager_AddAgent(AgentActor __result)
         {
             Console.WriteLine($"MapManager_AddAgent");
             if (_bMapLoaded && __result != null)
