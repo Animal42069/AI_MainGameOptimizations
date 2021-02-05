@@ -186,16 +186,16 @@ namespace AI_MainGameOptimizations
             (_worldAnimatorCulling = Config.Bind("World Optimizations", "Main Island Animator Culling", AnimatorCullingMode.CullCompletely, "(ILLUSION DEFAULT AlwaysAnimate) What world animators should do when they are not visible")).SettingChanged += (s, e) =>
             { WorldOptimizations.UpdateAnimatorCulling(_worldAnimatorCulling.Value); };
 
-            _miniMapMaxFPS = Config.Bind("Player Optimizations", "MiniMap Maximum FPS", 15, new ConfigDescription("Maximum FPS to render the MiniMap, higher values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
-            _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
-            _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
-            (_enableInactiveUIChecks = Config.Bind("Player Optimizations", "Inactive UI Checks", true, "When enabled, disables UI windows that aren't visible, so they aren't being rendered in the background")).SettingChanged += (s, e) =>
+            _miniMapMaxFPS = Config.Bind("Player Optimizations", "MiniMap Maximum FPS", 15, new ConfigDescription("(ILLUSION DEFAULT 60) FPS to render the MiniMap, higher values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
+            _commandUpdateRate = Config.Bind("Player Optimizations", "Command Update Rate", 15, new ConfigDescription("(ILLUSION DEFAULT 1) Number of frames to spread out command checks, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
+            _UIMenuUpdateRate = Config.Bind("Player Optimizations", "Inactive UI Update Rate", 5, new ConfigDescription("(ILLUSION DEFAULT 1) Number of frames to spread out checks to see if a UI has become active and needs to be displayed, lower values = more responsive but lower perfomance", new AcceptableValueRange<int>(1, 60)));
+            (_enableInactiveUIChecks = Config.Bind("Player Optimizations", "Inactive UI Checks", true, "(ILLUSION DEFAULT false) When enabled, disables UI windows that aren't visible, so they aren't being rendered in the background")).SettingChanged += (s, e) =>
             { if (_enableInactiveUIChecks.Value)
                     UIOptimizations.InitializeUserInterfaceOptimizations();
                 else
                     UIOptimizations.DestroyOptimizers();
             };
-            (_playerDynamicBones = Config.Bind("Player Optimizations", "Dynamic Bones", false, "(ILLUSION DEFAULT true) Enable/disable player dynamic bones")).SettingChanged += (s, e) =>
+            (_playerDynamicBones = Config.Bind("Player Optimizations", "Dynamic Bones", true, "(ILLUSION DEFAULT true) Enable/disable player dynamic bones")).SettingChanged += (s, e) =>
             { CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value); };
 
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
