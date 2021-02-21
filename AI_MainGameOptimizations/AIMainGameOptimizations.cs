@@ -14,10 +14,9 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.1.0";
+        public const string VERSION = "1.1.2.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
-        internal static ConfigEntry<bool> _enableIllusionDynamicBoneChecks;
         internal static ConfigEntry<bool> _IKSolverChecks;
         internal static ConfigEntry<bool> _LookControllerChecks;
         internal static ConfigEntry<int> _dynamicBoneUpdateRate;
@@ -87,7 +86,6 @@ namespace AI_MainGameOptimizations
 
         private void Awake()
         {
-            _enableIllusionDynamicBoneChecks = Config.Bind("Character Optimizations", "Illusion Dynamic Bone Checks", false, "(ILLUSION DEFAULT true) Disable to turn off Illusion Dynamic Bone Checks");
             _dynamicBoneUpdateRate = Config.Bind("Character Optimizations", "Dynamic Bone Enable Rate", 10, new ConfigDescription("(ILLUSION DEFAULT 1) Number of frames to spread out enabling/disabling dynamic bone checks, quicker response but lower perfomance", new AcceptableValueRange<int>(1, 60)));
             (_dynamicBoneClothingRange = Config.Bind("Character Optimizations", "Dynamic Bone Range - Accesories/Clothing", 250f, new ConfigDescription("(ILLUSION DEFAULT 10000) Range where clothing dynamic bones are enabled, always enabled during HScenes", new AcceptableValueRange<float>(1, 10000)))).SettingChanged += (s, e) =>
             { CharacterOptimizations.SetColliderRanges(_dynamicBoneGenitalRange.Value * _dynamicBoneGenitalRange.Value, _dynamicBoneHairRange.Value * _dynamicBoneHairRange.Value, _dynamicBoneClothingRange.Value * _dynamicBoneClothingRange.Value, _dynamicBoneBodyRange.Value * _dynamicBoneBodyRange.Value); };
@@ -208,7 +206,7 @@ namespace AI_MainGameOptimizations
         private static int UIUpdateCount = 0;
         private static int animalUpdateCount = 0;
         private const int AnimalUpdateRate = 6000;
-        private void Update()
+        internal void Update()
         {
             if (!_bMapLoaded)
                 return;
@@ -451,24 +449,6 @@ namespace AI_MainGameOptimizations
             AnimalOptimizations.InitializeAnimalOptimizations(_animalAnimatorCulling.Value);
             CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);
             
-        }
-
-        [HarmonyPrefix, HarmonyPatch(typeof(AIChara.CmpBoneBody), "EnableDynamicBonesBustAndHip")]
-        private static bool CmpBoneBody_EnableDynamicBonesBustAndHip()
-        {
-            return _enableIllusionDynamicBoneChecks.Value;
-        }
-
-        [HarmonyPrefix, HarmonyPatch(typeof(AIChara.CmpHair), "EnableDynamicBonesHair")]
-        private static bool CmpHair_EnableDynamicBonesHair()
-        {
-            return _enableIllusionDynamicBoneChecks.Value;
-        }
-
-        [HarmonyPrefix, HarmonyPatch(typeof(AIChara.CmpBase), "EnableDynamicBones")]
-        private static bool CmpBase_EnableDynamicBones()
-        {
-            return _enableIllusionDynamicBoneChecks.Value;
         }
 
         private static void SceneManager_sceneUnloaded(Scene scene)
