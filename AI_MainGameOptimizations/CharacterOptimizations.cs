@@ -253,8 +253,6 @@ namespace AI_MainGameOptimizations
                 if (dynamicBoneV2.enabled != isVisibleInBodyRange)
                     dynamicBoneV2.enabled = isVisibleInBodyRange;
             }
-
-            Console.WriteLine($"character {character.loadNo} dynamicBoneV2 {isVisibleInBodyRange}");
         }
 
         public static void EndHScene()
