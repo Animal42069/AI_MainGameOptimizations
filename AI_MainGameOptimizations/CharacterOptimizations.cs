@@ -92,6 +92,9 @@ namespace AI_MainGameOptimizations
 
         private static void DynamicBoneOptimize(AIChara.ChaControl character)
         {
+            if (character == null)
+                return;
+
             VisibilityMask visibilityMask = VisibilityMask.None;
             bool bodyVisibleInRange = false;
 
@@ -131,7 +134,7 @@ namespace AI_MainGameOptimizations
 
             foreach (var dynamicBoneV2 in _playerCharacter.GetComponentsInChildren<DynamicBone_Ver02>(true))
             {
-                if (!dynamicBoneV2)
+                if (dynamicBoneV2 == null)
                     continue;
 
                 if (dynamicBoneV2.enabled != onState)
@@ -149,14 +152,19 @@ namespace AI_MainGameOptimizations
 
         public static void UpdateAnimatorCulling(AnimatorCullingMode cullingMode)
         {
-            if (_characters != null)
-            {
-                foreach (var character in _characters)
-                    character.animBody.cullingMode = cullingMode;
-            }
-
             if (_playerCharacter != null)
                 _playerCharacter.animBody.cullingMode = cullingMode;
+
+            if (_characters.IsNullOrEmpty())
+                return;
+
+            foreach (var character in _characters)
+            {
+                if (character == null)
+                    continue;
+
+                character.animBody.cullingMode = cullingMode;
+            }
         }
 
         public static void InitializeHScene(AIChara.ChaControl[] hSceneFemales)
@@ -164,7 +172,7 @@ namespace AI_MainGameOptimizations
             if (_playerCharacter == null || _characters == null || hSceneFemales == null)
                 return;
 
-            Console.WriteLine("InitializeHScene");
+            Debug.Log("InitializeHScene");
 
             inHScene = true;
             foreach (AIChara.ChaControl character in _characters)
@@ -191,6 +199,9 @@ namespace AI_MainGameOptimizations
                 if (characterInHScene)
                     character.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             }
+
+            if (_playerCharacter == null)
+                return;
 
             _playerCharacter.animBody.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             SetPlayerDynamicBones(true);

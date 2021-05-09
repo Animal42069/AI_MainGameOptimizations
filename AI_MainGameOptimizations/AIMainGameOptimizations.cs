@@ -14,7 +14,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.2.1";
+        public const string VERSION = "1.1.2.3";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _IKSolverChecks;
@@ -246,8 +246,6 @@ namespace AI_MainGameOptimizations
             _playerObject = player;
             _playerCamera = Camera;
 
-            Console.WriteLine("EnviroSky_AssignAndStart");
-
             CameraOptimizations.InitializeCamera(Camera, 0.1f, 10000f);
             LightOptimizations.InitializeLighting(__instance.Components.DirectLight.GetComponent<Light>(), 10000f);
 
@@ -385,29 +383,23 @@ namespace AI_MainGameOptimizations
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Map), "RemoveAgent")]
         public static void MapManager_RemoveAgent(AgentActor agent)
         {
-            Console.WriteLine($"MapManager_RemoveAgent");
+            Debug.Log($"MapManager_RemoveAgent");
             if (_bMapLoaded && agent != null)
-            {
-                Console.WriteLine($"ChaControl {agent.ChaControl}");
                 CharacterOptimizations.RemoveCharacter(agent.ChaControl);
-            }
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Map), "AddAgent")]
         public static void MapManager_AddAgent(AgentActor __result)
         {
-            Console.WriteLine($"MapManager_AddAgent");
+            Debug.Log($"MapManager_AddAgent");
             if (_bMapLoaded && __result != null)
-            {
-                Console.WriteLine($"ChaControl {__result.ChaControl}");
                 CharacterOptimizations.AddCharacter(__result.ChaControl);
-            }
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Map), "InitSearchActorTargetsAll")]
         public static void MapManager_InitSearchActorTargetsAll()
         {
-            Console.WriteLine("MapManager_InitSearchActorTargetsAll");
+            Debug.Log("MapManager_InitSearchActorTargetsAll");
             InitializeOptimizers();
             _bMapLoaded = true;
         }
@@ -415,7 +407,7 @@ namespace AI_MainGameOptimizations
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Map), "ReleaseMap")]
         public static void MapManager_ReleaseMap()
         {
-            Console.WriteLine("MapManager_ReleaseMap");
+            Debug.Log("MapManager_ReleaseMap");
             DestroyOptimizers();
             _bMapLoaded = false;
         }
@@ -423,7 +415,7 @@ namespace AI_MainGameOptimizations
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Housing), "StartHousing")]
         private static void Housing_StartHousing()
         {
-            Console.WriteLine("Housing_StartHousing");
+            Debug.Log("Housing_StartHousing");
             DestroyOptimizers();
             _bMapLoaded = false;
         }
@@ -431,7 +423,7 @@ namespace AI_MainGameOptimizations
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Housing), "EndHousing")]
         private static void Housing_EndHousing()
         {
-            Console.WriteLine("Housing_EndHousing");
+            Debug.Log("Housing_EndHousing");
             InitializeOptimizers();
             _bMapLoaded = true;
         }
@@ -447,13 +439,12 @@ namespace AI_MainGameOptimizations
             LightOptimizations.AdjustCharacterLighting(_layerStrategy.Value);
             WorldOptimizations.InitializeWorldOptimizations(_basemapDistance.Value, _terrainCastShadows.Value, _layerStrategy.Value, _drawTreesAndFoliage.Value, _citySpotLightShadows.Value, _cityPointLightShadows.Value, _enableCityPointLights.Value, _citySpotLightIntensity.Value, _worldAnimatorCulling.Value);
             AnimalOptimizations.InitializeAnimalOptimizations(_animalAnimatorCulling.Value);
-            CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);
-            
+            CharacterOptimizations.SetPlayerDynamicBones(_playerDynamicBones.Value);      
         }
 
         private static void SceneManager_sceneUnloaded(Scene scene)
         {
-            Console.WriteLine($"SceneManager_sceneunloaded { scene.name}");
+            Debug.Log($"SceneManager_sceneunloaded { scene.name}");
             _bMapLoaded = false;
             DestroyOptimizers();
         }

@@ -45,6 +45,9 @@ namespace AI_MainGameOptimizations
             {
                 foreach (Light light in lights)
                 {
+                    if (light == null)
+                        continue;
+
                     if (light.name.Contains("FaceLight"))
                     {
                         light.cullingMask = (int)GameLayers.LayerMask.CharaLayer;
@@ -75,6 +78,9 @@ namespace AI_MainGameOptimizations
             {
                 foreach (Light light in lights)
                 {
+                    if (light == null)
+                        continue;
+
                     if (light.name.Contains("FaceLight"))
                     {
                         light.cullingMask = -956304089;

@@ -40,24 +40,36 @@ namespace AI_MainGameOptimizations
 
             foreach(var collider in soundColliders)
             {
+                if (collider == null)
+                    continue;
+
                 collider.gameObject.SetActive(true);
                 collider.enabled = true;
             }
 
             foreach (var collider in cameraColliders)
             {
+                if (collider == null)
+                    continue;
+
                 collider.gameObject.SetActive(true);
                 collider.enabled = true;
             }
 
             foreach (var particleMeshRenderer in particleMeshRenderers)
             {
+                if (particleMeshRenderer == null)
+                    continue;
+
                 particleMeshRenderer.gameObject.SetActive(true);
                 particleMeshRenderer.enabled = true;
             }
 
             foreach (var light in housingLights)
             {
+                if (light == null)
+                    continue;
+
                 light.enabled = true;
             }
 
@@ -277,6 +289,9 @@ namespace AI_MainGameOptimizations
 
             foreach(var particleSystem in housingParticleSystemsComplete)
             {
+                if (particleSystem == null)
+                    continue;
+
                 if (particleSystem.name.Contains(key))
                     particleSystem.gameObject.SetActive(active);
             }
@@ -316,6 +331,9 @@ namespace AI_MainGameOptimizations
 
             for (int index = startIndex; index < housingLights.Count; index += updateRate)
             {
+                if (housingLights[index]  == null)
+                    continue;
+
                 bool inRange = Math.Abs(positionX - housingLights[index].transform.position.x) < rangeLimit ||
                                Math.Abs(positionZ - housingLights[index].transform.position.z) < rangeLimit;
 
@@ -331,6 +349,9 @@ namespace AI_MainGameOptimizations
 
             for (int collider = startIndex; collider < colliders.Count; collider += updateRate)
             {
+                if (colliders[collider] == null)
+                    continue;
+
                 if (colliders[collider].enabled)
                 {
                     if ((Math.Abs(positionX - colliders[collider].transform.position.x) > rangeLimit || Math.Abs(positionZ - colliders[collider].transform.position.z) > rangeLimit))
@@ -443,6 +464,9 @@ namespace AI_MainGameOptimizations
 
             foreach (var housingLight in housingLights)
             {
+                if (housingLight == null || housingLight.gameObject == null)
+                    continue;
+
                 if (housingLight.gameObject.layer == (int)GameLayers.Layer.SmallObjectLayer ||
                     housingLight.gameObject.layer == (int)GameLayers.Layer.DefaultLayer ||
                     housingLight.gameObject.layer == (int)GameLayers.Layer.MapLayer)

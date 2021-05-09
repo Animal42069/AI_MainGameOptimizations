@@ -64,6 +64,9 @@ namespace AI_MainGameOptimizations
 
             for (int index = startIndex; index < UIMenuList.Count; index += updateRate)
             {
+                if (UIMenuList[index].gameObject == null)
+                    continue;
+
                 if (UIMenuList[index].gameObject.activeSelf != UIMenuList[index].IsActiveControl)
                     UIMenuList[index].gameObject.SetActive(UIMenuList[index].IsActiveControl);
             }
@@ -83,6 +86,9 @@ namespace AI_MainGameOptimizations
             {
                 foreach (var UIMenu in UIMenuList)
                 {
+                    if (UIMenu == null)
+                        continue;
+
                     if (UIMenuInitialState.TryGetValue(UIMenu, out bool initialState))
                         UIMenu.gameObject.SetActive(initialState);
                 }
