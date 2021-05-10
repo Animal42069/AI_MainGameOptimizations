@@ -14,7 +14,7 @@ namespace AI_MainGameOptimizations
     [BepInProcess("AI-Syoujyo")]
     public class AIMainGameOptimizations : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.2.3";
+        public const string VERSION = "1.1.3.0";
         private const string GUID = "animal42069.aimaingameoptimizations";
         
         internal static ConfigEntry<bool> _IKSolverChecks;
